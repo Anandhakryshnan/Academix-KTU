@@ -1,0 +1,368 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;800&family=Space+Mono&display=swap');
+@import "tailwindcss";
+
+:root {
+    --bg: #050505;
+    --mercury: #e0e0e0;
+    --mercury-dark: #666666;
+    --accent: #ffffff;
+    --text-dim: rgba(255, 255, 255, 0.5);
+    --filter-goo: url('#gooey');
+}
+
+@theme inline {
+    --color-background: var(--bg);
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--accent);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.mercury-wrapper {
+    background-color: var(--bg);
+    color: var(--accent);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-left: 8vw;
+    padding-top: 8vh;
+    padding-bottom: 120px; /* space for footer */
+    position: relative;
+}
+
+.mercury-wrapper * {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Interface Container */
+.auth-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px;
+    transition: max-width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.auth-container.has-results {
+    max-width: 1300px;
+}
+
+.auth-form-side {
+    flex: 0 0 360px;
+    width: 360px;
+}
+
+.auth-results-side {
+    flex: 1;
+    min-width: 600px;
+}
+
+.header {
+    margin-bottom: 60px;
+    text-align: left;
+}
+
+.brand-id {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.header h1 {
+    font-weight: 800;
+    font-size: 3rem;
+    line-height: 0.9;
+    letter-spacing: -2px;
+    margin-left: -4px;
+    margin-top: 0;
+}
+
+/* Utility */
+.footer-nav {
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.footer-nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-nav a:hover {
+    color: var(--accent);
+}
+
+/* Background Liquid Physics Simulation */
+.stage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    filter: var(--filter-goo);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.blob {
+    position: absolute;
+    background: linear-gradient(135deg, var(--mercury), #888);
+    border-radius: 50%;
+    filter: blur(60px);
+    animation: float 20s infinite alternate ease-in-out;
+    box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), 
+                10px 10px 30px rgba(255,255,255,0.2);
+    transition: margin 0.1s ease-out;
+}
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(10vw, 20vh) scale(1.2); }
+    66% { transform: translate(-5vw, 10vh) scale(0.8); }
+    100% { transform: translate(5vw, -10vh) scale(1.1); }
+}
+
+/* Form Elements */
+.form-group {
+    position: relative;
+    margin-bottom: 30px;
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+}
+.form-group:focus-within {
+    transform: translateX(10px);
+}
+.form-group label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+.form-group input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    padding: 12px 0;
+    font-size: 18px;
+    outline: none;
+    transition: border-color 0.4s;
+    font-family: 'Space Mono', monospace;
+}
+.input-glow {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background: var(--mercury);
+    transition: width 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+    box-shadow: 0 0 15px var(--mercury);
+}
+.form-group input:focus + .input-glow {
+    width: 100%;
+}
+
+/* The Mercury Button */
+.submit-wrap {
+    margin-top: 50px;
+    position: relative;
+}
+.btn-base {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 20px 40px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+    transition: letter-spacing 0.3s;
+}
+.btn-base:hover {
+    letter-spacing: 4px;
+}
+.btn-base:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    letter-spacing: 2px;
+}
+.mercury-drop {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: var(--mercury);
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    border-radius: 0;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.submit-wrap:hover:not(:disabled) .mercury-drop {
+    transform: translate(-50%, -50%) scale(1.05, 1.2);
+    filter: brightness(1.2);
+}
+
+/* SVG Filter Definition Hidden Element */
+.svg-filter-hidden {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .mercury-wrapper {
+        padding: 20px 10px;
+        padding-bottom: 120px; /* space for fixed footer */
+        flex-direction: column;
+    }
+    .auth-container {
+        flex-direction: column;
+        padding: 20px 10px;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    .auth-form-side {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 100%;
+    }
+    .auth-results-side {
+        min-width: 100%;
+        width: 100%;
+    }
+    .header h1 {
+        font-size: 2.2rem;
+    }
+    .result-export-container {
+        padding: 10px !important;
+        min-width: 100% !important;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .stats-grid > div {
+        padding: 15px !important;
+    }
+    .stats-grid > div > div:last-child {
+        font-size: 24px !important;
+    }
+    .header-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        width: 100%;
+        gap: 10px;
+    }
+    .kt-table th, .kt-table td {
+        padding: 8px 6px !important;
+        font-size: 9px !important;
+        letter-spacing: 0 !important;
+    }
+    .kt-table .course-name {
+        font-size: 10px !important;
+    }
+    .kt-table .grade-badge {
+        padding: 2px 4px !important;
+        font-size: 10px !important;
+    }
+    .footer-main {
+        padding: 10px 5px !important;
+        white-space: normal !important;
+        gap: 8px !important;
+        font-size: 8.5px !important;
+    }
+    .footer-main > div.divider {
+        display: none;
+    }
+}
+
+.footer-main {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 50;
+    padding: 15px 40px;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px 30px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-align: center;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+}
+
+.kt-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+.kt-table th, .kt-table td {
+    padding: 15px 20px;
+}
+.kt-table .course-name {
+    font-size: 14px;
+}
+.kt-table .grade-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+}
