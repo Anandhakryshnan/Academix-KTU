@@ -68,7 +68,7 @@ export function InputForm({ onSubmit, isLoading }: InputFormProps) {
               onClick={() => setSemesterId(sem)}
               style={{
                 background: 'transparent',
-                border: semesterId === sem ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.1)',
+                border: semesterId === sem ? '1px solid var(--accent)' : '1px solid var(--border-dim)',
                 color: semesterId === sem ? 'var(--accent)' : 'var(--text-dim)',
                 padding: '10px',
                 fontFamily: "'Space Mono', monospace",
@@ -86,7 +86,7 @@ export function InputForm({ onSubmit, isLoading }: InputFormProps) {
             style={{
               gridColumn: '1 / -1',
               background: 'transparent',
-              border: semesterId === 0 ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.1)',
+              border: semesterId === 0 ? '1px solid var(--accent)' : '1px solid var(--border-dim)',
               color: semesterId === 0 ? 'var(--accent)' : 'var(--text-dim)',
               padding: '10px',
               fontFamily: "'Space Mono', monospace",
@@ -110,7 +110,7 @@ export function InputForm({ onSubmit, isLoading }: InputFormProps) {
           {isLoading ? (
              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <Loader2 size={16} className="animate-spin" />
-                FETCHING DATA...
+                LOADING...
              </span>
           ) : (
             'Get Results'

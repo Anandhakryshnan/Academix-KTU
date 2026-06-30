@@ -80,11 +80,7 @@ export async function scrapeKTUResults(
 
   const profileHtml = await profileResponse.text();
   
-  if (
-    profileHtml.toLowerCase().includes("session expired") ||
-    (profileHtml.toLowerCase().includes("login") &&
-      !profileHtml.toLowerCase().includes("course"))
-  ) {
+  if (profileHtml.toLowerCase().includes("session expired")) {
     throw new Error("Invalid or expired session.");
   }
 
@@ -103,6 +99,12 @@ export async function scrapeKTUResults(
   let branch = "";
   
   const titleText = $prof("h3.panel-title").text().trim();
+  
+  // If there's no student name found, we are not on the grade card page (likely the login page)
+  if (!titleText) {
+    throw new Error("Invalid credentials. Please check your KTU username and password.");
+  }
+
   // Example: AISWARYA M(LIDK21CS069) (GOVERNMENT ENGINEERING COLLEGE IDUKKI)
   const nameMatch = titleText.match(/^(.*?)\((.*?)\)\s*\((.*?)\)/);
   if (nameMatch) {

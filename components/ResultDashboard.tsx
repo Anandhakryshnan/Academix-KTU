@@ -6,7 +6,8 @@ import { ResultTable } from "./ResultTable";
 import { trpc, setApiToken } from "@/trpc/client";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Download } from "lucide-react";
+import { Download, Sun, Moon } from "lucide-react";
+import { Toaster, toast } from "sonner";
 
 interface ResultDashboardProps {
   title: string;
@@ -21,6 +22,17 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
   // Legal Modals State
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  // Theme State
+  const [isLightMode, setIsLightMode] = useState(false);
+
+  useEffect(() => {
+    if (isLightMode) {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+  }, [isLightMode]);
 
   // Mercury Blobs Data
   const [blobsData, setBlobsData] = useState<Array<{ size: number; left: number; top: number; animationDelay: number; animationDuration: number }>>([]);
@@ -67,6 +79,18 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
   }, [tokenData]);
 
   const { data, error, isPending, mutate } = trpc.result.getResults.useMutation();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(`[ERR_ACCESS_DENIED]: ${error.message}`);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (data && lastQuery) {
+      toast.success(`Successfully fetched results for Semester ${lastQuery.semesterId === 0 ? 'All' : lastQuery.semesterId}`);
+    }
+  }, [data, lastQuery]);
 
   const handleSubmit = (values: FormValues) => {
     setLastQuery(values);
@@ -147,8 +171,10 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
       pdf.text(`SGPA: ${sgpa.toFixed(2)}`, 40, finalY + 45);
 
       pdf.save(`KTU_Result_${lastQuery?.username || "Export"}.pdf`);
+      toast.success("PDF Downloaded Successfully");
     } catch (err) {
       console.error("Failed to export image", err);
+      toast.error("Failed to generate PDF");
     } finally {
       setIsExporting(false);
     }
@@ -193,17 +219,31 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
         
         {/* Left Side: Always visible Form */}
         <div className="auth-form-side">
-          <header className="header">
+          <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <h1>ACADEMIX<br/>KTU</h1>
+            <button 
+              onClick={() => setIsLightMode(!isLightMode)}
+              style={{ 
+                background: 'var(--surface-dim)', 
+                border: '1px solid var(--border-dim)', 
+                color: 'var(--accent)', 
+                cursor: 'pointer', 
+                padding: '10px 15px',
+                borderRadius: '0',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-dim)'; e.currentTarget.style.borderColor = 'var(--border-dim)'; }}
+              title="Toggle Light/Dark Mode"
+            >
+              {isLightMode ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
           </header>
 
           <InputForm onSubmit={handleSubmit} isLoading={isPending} />
-
-          {error && (
-            <div style={{ marginTop: '20px', padding: '15px', borderLeft: '2px solid red', background: 'rgba(255,0,0,0.1)', fontFamily: "'Space Mono', monospace", fontSize: '11px', color: '#ff4444' }}>
-              [ERR_ACCESS_DENIED]: {error.message}
-            </div>
-          )}
 
           <footer className="footer-nav">
             <a href="https://ktu.edu.in/" target="_blank" rel="noreferrer">KTU WEBSITE</a>
@@ -227,8 +267,8 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
                   onClick={handleExport}
                   disabled={isExporting}
                   style={{ 
-                    background: 'rgba(255,255,255,0.05)', 
-                    border: '1px solid rgba(255,255,255,0.1)', 
+                    background: 'var(--surface-dim)', 
+                    border: '1px solid var(--border-dim)', 
                     color: 'var(--accent)', 
                     fontFamily: "'Space Mono', monospace", 
                     fontSize: '12px', 
@@ -242,8 +282,8 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
                     gap: '8px',
                     opacity: isExporting ? 0.5 : 1
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-dim)'; e.currentTarget.style.borderColor = 'var(--border-dim)'; }}
                 >
                   <Download size={14} />
                   {isExporting ? "EXPORTING..." : "SAVE PDF"}
@@ -251,8 +291,8 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
                 <button 
                   onClick={() => setLastQuery(null)} 
                   style={{ 
-                    background: 'rgba(255,255,255,0.05)', 
-                    border: '1px solid rgba(255,255,255,0.1)', 
+                    background: 'var(--surface-dim)', 
+                    border: '1px solid var(--border-dim)', 
                     color: 'var(--accent)', 
                     fontFamily: "'Space Mono', monospace", 
                     fontSize: '12px', 
@@ -262,8 +302,8 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
                     borderRadius: '0',
                     transition: 'all 0.3s'
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-dim)'; e.currentTarget.style.borderColor = 'var(--border-dim)'; }}
                 >
                   &times; CLEAR
                 </button>
@@ -282,19 +322,33 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
 
       </main>
 
+      <Toaster 
+        theme={isLightMode ? 'light' : 'dark'} 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--glass-bg-solid)',
+            color: 'var(--accent)',
+            border: '1px solid var(--border-dim)',
+            fontFamily: "'Space Mono', monospace",
+            borderRadius: '8px'
+          }
+        }}
+      />
+
       {/* Footer */}
       <footer className="footer-main">
-        <div>© 2026 Academix KTU. All rights reserved.</div>
-        <div className="divider" style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-        <button onClick={() => setIsPrivacyOpen(true)} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>
+        <div>&copy; {new Date().getFullYear()} Academix KTU. All rights reserved.</div>
+        <div className="divider" style={{ width: '1px', height: '12px', background: 'var(--border-dim)' }}></div>
+        <button onClick={() => setIsPrivacyOpen(true)} className="footer-link">
           PRIVACY POLICY
         </button>
-        <div className="divider" style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-        <button onClick={() => setIsTermsOpen(true)} style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>
+        <div className="divider" style={{ width: '1px', height: '12px', background: 'var(--border-dim)' }}></div>
+        <button onClick={() => setIsTermsOpen(true)} className="footer-link">
           TERMS OF SERVICE
         </button>
-        <div className="divider" style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-        <a href="https://anandhakrishnan-portfolio.vercel.app/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', transition: 'color 0.3s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>
+        <div className="divider" style={{ width: '1px', height: '12px', background: 'var(--border-dim)' }}></div>
+        <a href="https://anandhakrishnan-portfolio.vercel.app/" target="_blank" rel="noreferrer" className="footer-link">
           CONTACT DEVELOPER
         </a>
       </footer>
@@ -302,9 +356,9 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
       {/* Privacy Policy Modal */}
       {isPrivacyOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}>
-          <div style={{ background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)', padding: '40px', maxWidth: '600px', width: '90%', borderRadius: '16px', position: 'relative' }}>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border-dim)', padding: '40px', maxWidth: '600px', width: '90%', borderRadius: '16px', position: 'relative' }}>
             <button onClick={() => setIsPrivacyOpen(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
-            <h2 style={{ fontFamily: "'Space Mono', monospace", color: '#00ff55', fontSize: '18px', marginBottom: '20px' }}>🔒 PRIVACY POLICY & DATA SECURITY</h2>
+            <h2 style={{ fontFamily: "'Space Mono', monospace", color: 'var(--accent)', fontSize: '18px', marginBottom: '20px' }}>🔒 PRIVACY POLICY & DATA SECURITY</h2>
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '14px', color: 'var(--text-dim)', lineHeight: '1.6' }}>
               <p style={{ marginBottom: '15px' }}>Your privacy and data security are our absolute priority. By using this tool, you acknowledge the following:</p>
               <ul style={{ listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px' }}>
@@ -321,9 +375,9 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
       {/* Terms of Service Modal */}
       {isTermsOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}>
-          <div style={{ background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)', padding: '40px', maxWidth: '600px', width: '90%', borderRadius: '16px', position: 'relative' }}>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border-dim)', padding: '40px', maxWidth: '600px', width: '90%', borderRadius: '16px', position: 'relative' }}>
             <button onClick={() => setIsTermsOpen(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
-            <h2 style={{ fontFamily: "'Space Mono', monospace", color: 'var(--text-primary)', fontSize: '18px', marginBottom: '20px' }}>⚖️ TERMS OF SERVICE</h2>
+            <h2 style={{ fontFamily: "'Space Mono', monospace", color: 'var(--accent)', fontSize: '18px', marginBottom: '20px' }}>⚖️ TERMS OF SERVICE</h2>
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '14px', color: 'var(--text-dim)', lineHeight: '1.6' }}>
               <p style={{ marginBottom: '15px' }}>This tool is provided "as is", without warranty of any kind.</p>
               <ul style={{ listStyleType: 'disc', paddingLeft: '20px', marginBottom: '15px' }}>

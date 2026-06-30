@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
@@ -59,6 +60,102 @@ function calculateSGPA(courses: CourseResult[]) {
   return weightedPoints / totalCredits;
 }
 
+const SkeletonTable = () => (
+  <div style={{ marginTop: '20px', width: '100%', animation: 'fade-in 0.5s' }}>
+    <div style={{ padding: '20px', border: '1px solid var(--border-dim)', background: 'var(--glass-bg)', marginBottom: '30px' }}>
+      <div className="skeleton-box" style={{ width: '120px', height: '14px', marginBottom: '20px' }}></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px' }}>
+        <div className="skeleton-box" style={{ width: '100%', height: '80px' }}></div>
+        <div className="skeleton-box" style={{ width: '100%', height: '80px' }}></div>
+        <div className="skeleton-box" style={{ width: '100%', height: '80px' }}></div>
+        <div className="skeleton-box" style={{ width: '100%', height: '80px' }}></div>
+        <div className="skeleton-box" style={{ width: '100%', height: '80px' }}></div>
+      </div>
+    </div>
+    <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="skeleton-box" style={{ width: '200px', height: '24px' }}></div>
+      <div className="skeleton-box" style={{ width: '100px', height: '36px' }}></div>
+    </div>
+    
+    <div style={{ border: '1px solid var(--border-dim)', background: 'var(--glass-bg)' }}>
+      {[...Array(6)].map((_, i) => (
+        <div key={i} style={{ 
+          display: 'flex', 
+          padding: '15px 20px',
+          borderBottom: i !== 5 ? '1px solid var(--border-dim)' : 'none',
+          gap: '20px',
+          alignItems: 'center'
+        }}>
+          <div className="skeleton-box" style={{ width: '10%', height: '14px' }}></div>
+          <div className="skeleton-box" style={{ width: '50%', height: '14px' }}></div>
+          <div className="skeleton-box" style={{ width: '8%', height: '14px' }}></div>
+          <div className="skeleton-box" style={{ width: '8%', height: '20px' }}></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const Student3DCard = ({ details }: { details: { name: string; registerNo: string; college: string; branch: string; } }) => {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = ((y - centerY) / centerY) * -15; 
+    const rotateY = ((x - centerX) / centerX) * 15;
+    
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
+  return (
+    <div className="card-3d-container" style={{ perspective: '1000px' }}>
+      <div 
+        ref={cardRef}
+        className="card-3d"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: tilt.x === 0 && tilt.y === 0 ? 'transform 0.5s ease-out' : 'transform 0.1s ease-out',
+          padding: '30px', 
+          border: '1px solid var(--border-dim)', 
+          background: 'var(--glass-bg)', 
+          backdropFilter: 'blur(10px)', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          borderRadius: '16px'
+        }}
+      >
+        <div className="card-glare" style={{ 
+          backgroundPosition: `${50 + tilt.y * 2}% ${50 - tilt.x * 2}%`,
+          opacity: tilt.x === 0 && tilt.y === 0 ? 0 : 1
+        }}></div>
+        <div style={{ position: 'relative', zIndex: 20 }}>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>ACADEMIX ID</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{details.name}</div>
+          <div style={{ fontSize: '14px', color: 'var(--accent)', fontFamily: "'Space Mono', monospace", background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>{details.registerNo}</div>
+        </div>
+        <div style={{ textAlign: 'right', position: 'relative', zIndex: 20 }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginBottom: '4px', maxWidth: '300px' }}>{details.college}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-dim)', fontFamily: "'Space Mono', monospace" }}>{details.branch}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export function ResultTable({
   courses,
   semesterId,
@@ -89,12 +186,7 @@ export function ResultTable({
   const sgpa = calculateSGPA(courses);
 
   if (isLoading) {
-    return (
-      <div style={{ padding: '60px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', textAlign: 'center', fontFamily: "'Space Mono', monospace" }}>
-        <Loader2 size={32} className="animate-spin" style={{ margin: '0 auto 20px', color: 'var(--mercury)' }} />
-        <p style={{ color: 'var(--text-dim)', fontSize: '12px', letterSpacing: '4px' }}>RETRIEVING RESULTS...</p>
-      </div>
-    );
+    return <SkeletonTable />;
   }
 
   if (courses.length === 0) {
@@ -109,33 +201,23 @@ export function ResultTable({
   return (
     <div style={{ position: 'relative', zIndex: 10 }}>
 
-      {/* Student ID Header */}
+      {/* Student 3D ID Header */}
       {studentDetails && studentDetails.name && (
-        <div style={{ padding: '30px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>STUDENT PROFILE</div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{studentDetails.name}</div>
-            <div style={{ fontSize: '14px', color: 'var(--accent)', fontFamily: "'Space Mono', monospace" }}>{studentDetails.registerNo}</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginBottom: '4px', maxWidth: '300px' }}>{studentDetails.college}</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-dim)', fontFamily: "'Space Mono', monospace" }}>{studentDetails.branch}</div>
-          </div>
-        </div>
+        <Student3DCard details={studentDetails} />
       )}
 
       {/* Trend Graph (Visible only in All Semesters) */}
       {trendData && trendData.length > 0 && (
-        <div style={{ padding: '30px 20px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', marginBottom: '30px', backdropFilter: 'blur(10px)' }}>
+        <div style={{ padding: '30px 20px', border: '1px solid var(--border-dim)', background: 'var(--glass-bg)', marginBottom: '30px', backdropFilter: 'blur(10px)' }}>
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '20px' }}>SGPA TRAJECTORY</div>
           <div style={{ width: '100%', height: '200px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-dim)" vertical={false} />
                 <XAxis dataKey="semester" stroke="var(--text-dim)" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 10]} stroke="var(--text-dim)" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ background: 'rgba(0,0,0,0.8)', border: '1px solid var(--accent)', borderRadius: '0', fontFamily: "'Space Mono', monospace", fontSize: '12px' }}
+                  contentStyle={{ background: 'var(--glass-bg-solid)', border: '1px solid var(--accent)', borderRadius: '0', fontFamily: "'Space Mono', monospace", fontSize: '12px' }}
                   itemStyle={{ color: 'var(--accent)' }}
                 />
                 <ReferenceLine y={sgpa} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'AVG', fill: 'var(--text-dim)', fontSize: 10 }} />
@@ -236,10 +318,10 @@ export function ResultTable({
       )}
 
       {/* Raw Data Table */}
-      <div style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', overflowX: 'auto', width: '100%' }}>
+      <div style={{ border: '1px solid var(--border-dim)', background: 'var(--glass-bg)', backdropFilter: 'blur(10px)', overflowX: 'auto', width: '100%' }}>
         <table className="kt-table">
           <thead>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--text-dim)' }}>
+            <tr style={{ borderBottom: '1px solid var(--border-dim)', fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--text-dim)' }}>
               <th style={{ fontWeight: 'normal' }}>COURSE CODE</th>
               <th style={{ fontWeight: 'normal' }}>COURSE NAME</th>
               <th style={{ fontWeight: 'normal', textAlign: 'center' }}>CREDITS</th>
@@ -248,7 +330,7 @@ export function ResultTable({
           </thead>
           <tbody>
             {courses.map((course, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+              <tr key={idx} style={{ borderBottom: '1px solid var(--surface-dim)', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-dim)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                 <td style={{ fontFamily: "'Space Mono', monospace", color: 'var(--text-dim)' }}>
                   {course.courseCode}
                 </td>
