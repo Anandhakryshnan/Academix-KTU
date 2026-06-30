@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { InputForm, type FormValues } from "./InputForm";
 import { ResultTable } from "./ResultTable";
 import { trpc, setApiToken } from "@/trpc/client";
-import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Download } from "lucide-react";
 
 interface ResultDashboardProps {
@@ -83,17 +83,69 @@ export function ResultDashboard({ title, subtitle }: ResultDashboardProps) {
     if (!exportRef.current) return;
     try {
       setIsExporting(true);
-      const width = exportRef.current.offsetWidth;
-      const height = exportRef.current.offsetHeight;
-      const dataUrl = await htmlToImage.toPng(exportRef.current, { quality: 1.0, pixelRatio: 2 });
-      
       const pdf = new jsPDF({
-        orientation: width > height ? 'landscape' : 'portrait',
-        unit: 'px',
-        format: [width, height]
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'A4'
       });
       
-      pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
+      // Header
+      pdf.setFontSize(18);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Academix KTU - Result Statement", 40, 40);
+
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Student ID: ${lastQuery?.username || "N/A"}`, 40, 65);
+      pdf.text(`Semester: ${lastQuery?.semesterId === 0 ? 'ALL SEMESTERS' : lastQuery?.semesterId}`, 40, 80);
+      
+      let startY = 95;
+      if (data?.studentDetails) {
+        pdf.text(`Name: ${data.studentDetails.name}`, 40, 95);
+        pdf.text(`Institution: ${data.studentDetails.college}`, 40, 110);
+        startY = 135;
+      }
+
+      // Generate Table
+      const tableData = courses.map((c) => [
+        c.courseCode,
+        c.courseName,
+        c.credit,
+        c.grade
+      ]);
+
+      autoTable(pdf, {
+        startY: startY,
+        head: [['Course Code', 'Course Name', 'Credits', 'Grade']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [20, 20, 20] },
+        styles: { fontSize: 10, cellPadding: 5 },
+      });
+
+      // Calculate Summary
+      let totalCredits = 0;
+      let weightedPoints = 0;
+      const GRADE_POINTS: Record<string, number> = {
+        S: 10, "A+": 9, A: 8.5, "B+": 8, B: 7.5,
+        "C+": 7, C: 6.5, D: 6, P: 5.5, F: 0, FE: 0, AB: 0,
+      };
+
+      courses.forEach((course) => {
+        const credit = parseFloat(course.credit) || 0;
+        const gradePoint = GRADE_POINTS[course.grade.toUpperCase()] ?? 0;
+        totalCredits += credit;
+        weightedPoints += credit * gradePoint;
+      });
+      const sgpa = totalCredits === 0 ? 0 : (weightedPoints / totalCredits);
+
+      const finalY = (pdf as any).lastAutoTable.finalY || startY + 50;
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Total Credits: ${totalCredits.toFixed(1)}`, 40, finalY + 30);
+      pdf.text(`SGPA: ${sgpa.toFixed(2)}`, 40, finalY + 45);
+
       pdf.save(`KTU_Result_${lastQuery?.username || "Export"}.pdf`);
     } catch (err) {
       console.error("Failed to export image", err);
