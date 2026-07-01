@@ -10,4 +10,6 @@ const handler = (req: Request) =>
     createContext: async () => createTRPCContext({ headers: req.headers }),
   });
 
+export const maxDuration = 60;
+
 export { handler as GET, handler as POST };
